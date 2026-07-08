@@ -44,6 +44,11 @@
             <td><img src="<%= student[i].image %>" width="20%"></td>
             <td><%= student[i].dob %></td>
             <td><%= student[i].contact %></td>
+            <!--edit link-->
+            <td><a href="/editStudent/<%= student[i].student_id %>">Edit</a></td>
+            <!--delete link-->
+            <td><a href="/deleteStudent/<%= student[i].student_id %>"
+              onclick="return confirm('Are you sure you want to delete this student?')">Delete</a></td>
           </tr>
         <% } %>
       </tbody>
