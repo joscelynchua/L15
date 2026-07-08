@@ -79,6 +79,7 @@ app.post('/addStudent', (req, res) => {
   }); 
 });
 
+// Route to edit a student by ID
 app.get('/editStudent/:id', (req,res) => {
   const student_id = req.params.id;
   const sql = 'SELECT * FROM student WHERE student_id = ?';
