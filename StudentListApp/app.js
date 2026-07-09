@@ -1,7 +1,18 @@
 const express = require('express'); 
 const mysql = require('mysql2'); 
+const multer = require('multer');
 const app = express(); 
- 
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public/images'); // Specify the destination folder for uploaded images
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname); // Use a unique filename for the uploaded image
+  }
+});
+const upload = multer({ storage: storage });
+
 // Create MySQL connection 
 const connection = mysql.createConnection({     
     host: 'localhost',     
@@ -23,6 +34,7 @@ app.set('view engine', 'ejs');
 //  enable static files 
 app.use(express.static('public')); 
 app.use(express.urlencoded({ extended: false }));
+app.use(express.static('public'));
 // Define routes
 app.get('/', (req, res) => {
     const sql = 'SELECT * FROM student';
@@ -62,9 +74,15 @@ app.get('/addStudent', (req, res) => {
   res.render('addStudent'); 
 });
 
-app.post('/addStudent', (req, res) => {
+app.post('/addStudent', upload.single('image'), (req, res) => {
   // Extract student data from the request body   
-    const { name, contact, dob, image } = req.body;   
+    const { name, contact, dob } = req.body;  
+    let image;
+    if (req.file) {
+      image = req.file.filename; // Get the filename of the uploaded image
+    } else {
+      image = null; // No image uploaded
+    }
     const sql = 'INSERT INTO student (name, contact, dob, image) VALUES (?, ?, ?, ?)';
   // Insert the new student into the database
     connection.query( sql , [name, contact, dob, image], (error, results) => {     
@@ -100,14 +118,19 @@ app.get('/editStudent/:id', (req,res) => {
   }); 
 });
 
-app.post('/editStudent/:id', (req, res) => {
+app.post('/editStudent/:id', upload.single('image'), (req, res) => {
   const student_id = req.params.id;
   // Extract student data from the request body   
   const { name, contact, dob } = req.body;
-  const sql = 'UPDATE student SET name = ? , contact = ?, dob = ? WHERE student_id = ?';
+  let image = req.body.currentImage; // Get the image URL from the form input
+  if (req.file) {
+    image = req.file.filename; // Get the filename of the uploaded image
+  }
+
+  const sql = 'UPDATE student SET name = ? , contact = ?, dob = ?, image = ? WHERE student_id = ?';
   
   // Insert the new student into the database
-  connection.query( sql , [name, contact, dob, student_id], (error, results) => {     
+  connection.query( sql , [name, contact, dob, image, student_id], (error, results) => {     
     if (error) {
       // Handle any error that occurs during the database operation       
       console.error("Error updating student:", error);       
